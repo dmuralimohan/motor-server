@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@fastify/cors": "^8.0.0",
-    "bcryptjs": "^2.4.3",
+    "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
     "fastify": "^4.0.0",
     "firebase-admin": "^12.6.0",
