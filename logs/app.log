@@ -1,0 +1,4 @@
+{"level":30,"time":"2024-10-24T08:38:12.462Z","pid":60084,"hostname":"murali-15351","msg":"firebase is connected"}
+{"level":30,"time":"2024-10-24T08:38:12.566Z","pid":60084,"hostname":"murali-15351","msg":"Server listening at http://[::1]:3001"}
+{"level":30,"time":"2024-10-24T08:38:12.568Z","pid":60084,"hostname":"murali-15351","msg":"Server listening at http://127.0.0.1:3001"}
+{"level":30,"time":"2024-10-24T08:38:12.568Z","pid":60084,"hostname":"murali-15351","msg":"Server is Started in 3001 Address:http://[::1]:3001"}
