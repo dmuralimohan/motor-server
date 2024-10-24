@@ -2,7 +2,7 @@
     Control all the user Routes with corresponding requests and responses
 */
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 
 const UserModel = require('../models/user');

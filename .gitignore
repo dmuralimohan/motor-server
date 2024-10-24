@@ -1,2 +1,4 @@
 config/keyfile.json
 .gitignore
+.vercel
+node_modules
