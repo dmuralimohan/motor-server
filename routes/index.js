@@ -8,7 +8,7 @@ const motorRoutes = require('./motor');
 async function loadAllRoutes(fastify, options)
 {
   fastify.register(userRoutes);
-  fastify.register(motorRoutes);
+  // fastify.register(motorRoutes);
 }
 
 module.exports = loadAllRoutes;

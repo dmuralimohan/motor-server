@@ -4,7 +4,8 @@
   "description": "motor server",
   "main": "app.js",
   "scripts": {
-    "test": "test"
+    "test": "test",
+    "start":"node app"
   },
   "author": "Muralimohan D",
   "license": "ISC",

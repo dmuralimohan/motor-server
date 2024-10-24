@@ -100,7 +100,7 @@ const port = process.env.PRODUCTION_PORT || 3001;
 
 fastify.listen({
     port: port,
-    host: 'localhost'
+    host: '0.0.0.0'
 }).then((address) => {
     logger.info("Server is Started in "+ port +" Address:"+ address);
     console.log(`Server started`);

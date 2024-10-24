@@ -4,14 +4,14 @@
 
 require('dotenv').config();
 const admin = require('firebase-admin');
-const serviceAccount = require('../config/keyfile.json');
+// const serviceAccont = {} ;//require('./config/keyfile.json');
 const { logger } = require('./fastify');
 
 let auth, db, userCollection, motorCollection;
 
 try {
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert(JSON.parse(Buffer.from(process.env.FIREBASE_CREDENTIAL, 'base64').toString())),
     databaseURL: "https://maxcontroller-6b85d-default-rtdb.firebaseio.com"
   });
   

@@ -28,8 +28,8 @@ async function getMotorDetails(request, reply){
     }
     catch(error)
     {
-        console.log(err);
-        logger.error(`Something error occurred [getMotorDetails]"+ ${err}`);
+        console.log(error);
+        logger.error(`Something error occurred [getMotorDetails]"+ ${error}`);
 
         return new Error("Some error occurred getting motor details");
     }
@@ -66,7 +66,7 @@ async function addMotorDetails(request, reply){
     }
     catch(error){
         console.log(error);
-        logger.error(`Something error occurred [addMotorDetails]"+ ${err}`);
+        logger.error(`Something error occurred [addMotorDetails]"+ ${error}`);
 
         return new Error("Some error occurred adding motor details");
     }
