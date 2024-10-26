@@ -10,19 +10,21 @@ const utils = require('../utils');
 async function getMotorDetails(request, reply){
     try{
         console.log("motor get request landed");
-        logger.info(`motorData is received: ${JSON.stringify(request.body)}`);
+        logger.info(`motorData is received: ${JSON.stringify(request.query)}`);
+        console.log(request.query);
 
-        const { motorId } = request.body;
-        if(motorId)
+        const { motorId } = request.query;
+        console.log(motorId);
+        if(!motorId)
         {
             return reply.code(401).send("required params not found");
         }
-        const userId = request.userId; //authenticated from middleware
+        // const userId = request.userId; //authenticated from middleware
 
-        const motorDetails = motorModel.isValidMotorUser(userId, motorId);
+        const motorDetails = await motorModel.getMotorDetails(motorId); //motorModel.isValidMotorUser(userId, motorId);
         if(!motorDetails)
         {
-            return reply.code(401).send("Unauthorized user");
+            return reply.code(401).send("Unauthorized motor details");
         }
         reply.status(200).send(motorDetails);
     }
