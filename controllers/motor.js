@@ -78,16 +78,16 @@ async function updateMotorDetails(request, reply){
     try{
         console.log("landed from updateMotorDetails");
         
-        const { motorId,...motorData } = request.body;
+        const { motorId, ...motorData } = request.body;
         const userId = request.userId;
 
-        const motorDetails = motorModel.isValidMotorUser(userId, motorId);
+        /*const motorDetails = motorModel.isValidMotorUser(userId, motorId);
         if(!motorDetails)
         {
             return reply.code(401).send("Unauthorized user");
-        }
+        }*/
         
-        const isUpdated = motorModel.updateMotorDetails(motorData);
+        const isUpdated = motorModel.updateMotorDetails(motorId, motorData);
         if(isUpdated)
         {
             logger.info("motor data updated sucessfully");

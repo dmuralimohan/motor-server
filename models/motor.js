@@ -27,8 +27,28 @@ async function isValidMotorUser(userId, motorId){
     return false;
 }
 
-async function updateMotorDetails(motorData){
-    return false;
+async function updateFirebaseData(ref, data){
+    for(const key in data){
+      if(typeof data[key] === 'object' && data[key] !== null){
+        await updateFirebaseData(ref.child(key), data[key]);
+      }
+      else{
+        await ref.child(key).set(data[key]);
+      }
+    }
+    return true;
+}
+
+async function updateMotorDetails(motorId, motorData){
+    try{
+        const ref = motorCollection.child(motorId);
+        await updateFirebaseData(ref, motorData);
+        return true;
+    }
+    catch(error){
+        logger.error(error);
+        return false;
+    }
 }
 
 async function addUser(userId, motorId){
