@@ -40,15 +40,15 @@ async function getMotorDetails(request, reply){
 async function addMotorDetails(request, reply){
     try{
         console.log("motor post request landed");
-        const { emailId, motorId, motorToken } = request.body;
+        const { phonenumber, devicename, deviceid } = request.body;
         
-        if(!emailId || !motorId || !motorToken)
+        if(!phonenumber || !devicename || !deviceid)
         {
             logger.info("invalid credentials from addMotorDetails");
             return reply.code(401).send("Invalid Credentials");
         }
 
-        if(!motorModel.isValidMotorAdmin(motorId, motorToken))
+        if(!motorModel.isValidMotorId(deviceid))
         {
             logger.info("invalid motor credentials from addMotorDetails");
             reply.code(400).send("Unauthorized user");

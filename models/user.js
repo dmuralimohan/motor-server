@@ -112,25 +112,23 @@ const collection = userCollection;
 const createUser = async (userData) => {
   try
   {
-    const emailId = userData.email;
-    const isExists = await isUserExistsByEmailId(emailId);
-
-    if(isExists){
+    const isUserExist = await isUserExistsByPhoneNumber(userData.phonenumber);
+    console.log(isUserExist);
+    if(isUserExist){
       return {error: "User has Already Exists"};
     }
 
     validateUserRegisterSchema(userData);
-    const user = userCollection.push();
-    userData.password = await bcrypt.hash(userData.password, 10);
+    const user = collection.push();
+    // userData.password = await bcrypt.hash(userData.password, 10);
     console.log(userData);
     await user.set(userData);
     
     let userId = user.key;
-  
-    logger.info("User has registered successfully " + userId);
-    console.log("userId:"+userId);
+    const snapshot = await user.get();
+    logger.info("User has registered successfully " + userId)
 
-    return userId;
+    return snapshot.val();
   }
   catch(error)
   {
@@ -277,7 +275,7 @@ const deleteUserByEmail = async (emailId) => {
 
 const validateUserRegisterSchema = async (userData) => {
   try {
-    await userRegisterSchema.validateAsync(userData);
+    await baseUserSchema.validateAsync(userData);
   } catch(err)
   {
     return new Error('Invalid user data '+ err);
@@ -306,6 +304,36 @@ const isUserExistsByEmailId = async (emailId) => {
       logger.error(err);
       throw new Error(err);
   }
+}
+
+const getUserByPhoneNumber = async (phonenumber) => {
+  const userSnapShot = await collection.once('value');
+  const users = userSnapShot.val();
+  const userId = Object.keys(users).filter(id => {
+    const user = users[id];
+    return user.phonenumber == phonenumber;
+  });
+
+  if(userId)
+  {
+    return users[userId];
+  }
+  return undefined;
+}
+
+const isUserExistsByPhoneNumber = async (phoneNumber) => {
+  try{
+    const user = await getUserByPhoneNumber(phoneNumber);
+    logger.info(`Existing checking this phonenumber: ${phoneNumber}: ${JSON.stringify(user)}`);
+    if(user && user.phonenumber){
+      return true;
+    }
+  }
+  catch(error){
+    logger.error(error);
+    throw new Error(error);
+  }
+  return false;
 }
 
 /*
@@ -348,4 +376,4 @@ const generateRefreshToken = async (userData) => {
   }
 }
 
-module.exports = { createUser, getUser, updateUser, deleteUserById, deleteUserByEmail,  getUserByEmail, getUserIdByEmailId, isUserExistsByUId, isUserExistsByEmailId, generateAuthToken, generateRefreshToken, getUserByClientId };
+module.exports = { createUser, getUser, updateUser, deleteUserById, deleteUserByEmail,  getUserByEmail, getUserIdByEmailId, isUserExistsByUId, isUserExistsByEmailId, generateAuthToken, generateRefreshToken, getUserByClientId, isUserExistsByPhoneNumber, getUserByPhoneNumber };

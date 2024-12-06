@@ -19,11 +19,13 @@ const userRegisterSchema = Joi.object({
 const baseUserSchema = Joi.object({
   firstname: Joi.string().optional(),
   lastname: Joi.string().optional(),
+  username: Joi.string().optional(),
   email: Joi.string().email().optional(),
   password: Joi.string().min(6).optional(),
   dob: Joi.date().optional(),
   country: Joi.string().optional(),
-  verifyCode: Joi.number().optional(),
+  activationcode: Joi.number().optional(),
+  phonenumber: Joi.string().optional(),
   authToken: Joi.string().optional()
 }).options({ presence: 'optional' });
 

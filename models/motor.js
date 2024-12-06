@@ -23,7 +23,12 @@ async function getMotorDetails(motorId){
     }
 }
 
-async function isValidMotorUser(userId, motorId){
+async function isValidMotorId(motorId){
+    const motorDetails = getMotorDetails(motorId);
+    if(motorDetails)
+    {
+        return true;
+    }
     return false;
 }
 
@@ -57,7 +62,7 @@ async function addUser(userId, motorId){
 
 module.exports = {
     getMotorDetails,
-    isValidMotorUser,
+    isValidMotorId,
     updateMotorDetails,
     addUser
 }
