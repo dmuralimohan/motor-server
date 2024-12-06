@@ -85,7 +85,10 @@ async function signUp(request, reply){
         const user = await UserModel.createUser(request.body);
         if(user.error)
         {
-            return reply.status(400).send(user.error);
+            return reply.status(400).send({
+                message: user.error,
+                isSuccess: false
+            });
         }
         else
         {
