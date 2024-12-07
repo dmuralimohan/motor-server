@@ -274,10 +274,9 @@ const deleteUserByEmail = async (emailId) => {
 }
 
 const validateUserRegisterSchema = async (userData) => {
-  try {
+  try{
     await baseUserSchema.validateAsync(userData);
-  } catch(err)
-  {
+  }catch(err){
     return new Error('Invalid user data '+ err);
   }
 };
@@ -327,7 +326,7 @@ const isUserExistsByPhoneNumber = async (phoneNumber) => {
     const user = await getUserByPhoneNumber(phoneNumber);
     logger.info(`Existing checking this phonenumber: ${phoneNumber}: ${JSON.stringify(user)}`);
     if(user && user.phonenumber){
-      return true;
+      return user.userId;
     }
   }
   catch(error){
@@ -336,6 +335,41 @@ const isUserExistsByPhoneNumber = async (phoneNumber) => {
   }
   return false;
 }
+
+const addDevice = async (phonenumber, devicename, deviceid) => {
+  try{
+    const { userId } = await getUserByPhoneNumber(phonenumber);
+    if(!userId){
+      console.error('User not found');
+      return false;
+    }
+
+    const devicesRef = collection.child(userId).child('devices');
+    await devicesRef.update({[deviceid]: devicename});
+
+    return true;
+  }catch(error){
+    console.error('Error adding device:', error);
+  }
+  return false;
+}
+
+const removeDevice = async (phonenumber, deviceid) => {
+  try{
+    const { userId } = await getUserByPhoneNumber(phonenumber);
+    if (!userId){
+      console.error('User not found');
+      return false;
+    }
+
+    const devicesRef = collection.child(userId).child('devices');
+    await devicesRef.child(deviceid).remove();
+
+    return true;
+  }catch(error){
+    return false;
+  }
+};
 
 /*
   Generating Authentication Token and Refreshtoken
@@ -355,7 +389,7 @@ const generateAuthToken = async ({email}) => {
   try {
     const uid = await getUserIdByEmailId(email);
     const userData = {uid: uid};
-    const authToken = await jwt.sign(userData, config.AUTH_KEY, {expiresIn: "15m"});
+    const authToken = jwt.sign(userData, config.AUTH_KEY, {expiresIn: "15m"});
     logger.info("Authentication token Generated Successfully AUTHTOKEN: "+ authToken);
 
     return authToken;
@@ -367,7 +401,7 @@ const generateAuthToken = async ({email}) => {
 
 const generateRefreshToken = async (userData) => {
   try {
-    const authToken = await jwt.sign(userData, config.REFRESH_AUTH_KEY, {expiresIn: "1d"});
+    const authToken = jwt.sign(userData, config.REFRESH_AUTH_KEY, {expiresIn: "1d"});
     logger.info("Refresh token Generated Successfully REFRESHTOKEN: "+ authToken);
 
     return authToken;
@@ -377,4 +411,20 @@ const generateRefreshToken = async (userData) => {
   }
 }
 
-module.exports = { createUser, getUser, updateUser, deleteUserById, deleteUserByEmail,  getUserByEmail, getUserIdByEmailId, isUserExistsByUId, isUserExistsByEmailId, generateAuthToken, generateRefreshToken, getUserByClientId, isUserExistsByPhoneNumber, getUserByPhoneNumber };
+module.exports = { 
+  createUser,
+  getUser,
+  updateUser,
+  deleteUserById,
+  deleteUserByEmail,
+  getUserByEmail,
+  getUserIdByEmailId,
+  isUserExistsByUId,
+  isUserExistsByEmailId,
+  generateAuthToken,
+  generateRefreshToken,
+  getUserByClientId,
+  isUserExistsByPhoneNumber,
+  getUserByPhoneNumber,
+  addDevice 
+};

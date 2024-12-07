@@ -51,7 +51,9 @@ async function addMotorDetails(request, reply){
         if(!motorModel.isValidMotorId(deviceid))
         {
             logger.info("invalid motor credentials from addMotorDetails");
-            reply.code(400).send("Unauthorized user");
+            reply.code(400).send({
+                message: "Invalid MotorId"
+            });
         }
 
         const addedCode = motorModel.addUser(emailId, motorId);

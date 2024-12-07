@@ -5,11 +5,9 @@
 const { auth, db, motorCollection } = require('../plugins/firebase');
 
 const { logger } = require('../plugins/fastify');
-const config = require('../config/config');
 
 async function getMotorDetails(motorId){
     logger.info("Getting motorId to get Motor Details... motorId is: "+ motorId);
-
     try
     {
         const motorSnapShot = await motorCollection.once('value');
@@ -58,6 +56,10 @@ async function updateMotorDetails(motorId, motorData){
 
 async function addUser(userId, motorId){
     return false;
+}
+
+async function updateNotification(userId, motorid, event){
+    return true;
 }
 
 module.exports = {

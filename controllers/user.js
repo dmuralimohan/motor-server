@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 
 
 const UserModel = require('../models/user');
+const MotorModel = require('../models/motor');
 const logger = require('../plugins/fastify').logger;
 const Utils = require('../utils');
 
@@ -107,6 +108,59 @@ async function signUp(request, reply){
     }
 }
 
+async function addDevice(request, reply){
+    try{
+        console.log("addDevice landed");
+        const { phonenumber, devicename = "new Device", deviceid } = request.body;
+
+        if(!phonenumber || !deviceid)
+        {
+            logger.info("invalid credentials from addMotorDetails");
+            return reply.code(401).send("Invalid Credentials");
+        }
+
+        if(!MotorModel.isValidMotorId(deviceid))
+        {
+            logger.info("invalid motor credentials from addMotorDetails");
+            reply.code(400).send({
+                message: "Invalid MotorId",
+                isSuccess: false
+            });
+        }
+
+        if(!UserModel.isUserExistsByPhoneNumber(phonenumber))
+        {
+            logger.info("user not exist phonenumber:"+ phonenumber);
+            reply.code(400).send({
+                message: "user not exist",
+                isSuccess: false
+            });
+        }
+
+        const isDeviceAdded = UserModel.addDevice(phonenumber, devicename, deviceid);
+        if(isDeviceAdded)
+        {
+            logger.info(`user device added successfully, ${phonenumber} ${devicename} ${deviceid}`);
+            reply.code(200).send({
+                message: "device added successfully",
+                deviceid: deviceid,
+                isSuccess:true
+            });
+        }
+        else{
+            logger.info(`user device not added, ${phonenumber} ${devicename} ${deviceid}`);
+            reply.code(400).send({
+                message: "device not added, kindly try again later",
+                isSuccess: false
+            });
+        }
+    }
+    catch(error){
+        logger.error(error);
+        throw new Error(error);
+    }
+}
+
 async function isNewUserId(request, reply){
     try {
         const email = request.body.data.email.toString();
@@ -130,5 +184,6 @@ async function isNewUserId(request, reply){
 module.exports = {
     signIn,
     signUp,
-    isNewUserId
+    isNewUserId,
+    addDevice
 };
