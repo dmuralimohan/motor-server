@@ -316,6 +316,7 @@ const getUserByPhoneNumber = async (phonenumber) => {
 
   if(userId)
   {
+    users[userId].userId = userId[0];
     return users[userId];
   }
   return undefined;

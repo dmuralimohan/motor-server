@@ -51,11 +51,15 @@ async function signIn(request, reply){
 
         reply.header("Set-Cookie", [authCookie]);
 
-        delete userObj.password;
-        userObj.isSuccess = true;
+        const responseObj = {
+            isSuccess: true,
+            userid: userObj.userId,
+            motorid: activationcode,
+            devices: userObj.devices
+        };
 
         reply.status(200).send({
-            data: userObj
+            data: responseObj
         });
 
         logger.info(`User Logged in Successfully USERNAME: ${username} in ${new Date()}`);
