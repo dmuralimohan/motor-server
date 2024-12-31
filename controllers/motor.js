@@ -5,7 +5,6 @@
 const userModel = require('../models/user');
 const motorModel = require('../models/motor');
 const logger = require('../plugins/fastify').logger;
-const utils = require('../utils');
 
 async function getMotorDetails(request, reply){
     try{
@@ -79,9 +78,8 @@ async function addMotorDetails(request, reply){
 async function updateMotorDetails(request, reply){
     try{
         console.log("landed from updateMotorDetails");
-        
-        const { motorId, ...motorData } = request.body;
-        const userId = request.userId;
+
+        const { motorid, userid,  data} = request.body;
 
         /*const motorDetails = motorModel.isValidMotorUser(userId, motorId);
         if(!motorDetails)
@@ -89,13 +87,18 @@ async function updateMotorDetails(request, reply){
             return reply.code(401).send("Unauthorized user");
         }*/
         
-        const isUpdated = motorModel.updateMotorDetails(motorId, motorData);
+        const isUpdated = motorModel.updateMotorDetails(motorid, data);
         if(isUpdated)
         {
+            const [key, value] = Object.entries(data)[0];
+            const notification = `${key == "status" ? "motor status" : key} is ${value}, updated by ${await userModel.getUserNameByUserId(userid)}`;
+            console.log(notification);
+            if(motorModel.updateNotification(userid, motorid, notification)){
+                return reply.code(200).send({
+                    message: "Data updated sucessfully"
+                });
+            }
             logger.info("motor data updated sucessfully");
-            return reply.code(200).send({
-                message: "Data updated sucessfully"
-            });
         }
         
         logger.info("unable to update the motor details");
@@ -105,7 +108,7 @@ async function updateMotorDetails(request, reply){
     }
     catch(error){
         console.log(error);
-        logger.error(`Something error occurred [updateMotorDetails]"+ ${err}`);
+        logger.error(`Something error occurred [updateMotorDetails]"+ ${error}`);
 
         return new Error("Some error occurred updating motor details");
     }

@@ -14,6 +14,7 @@ async function signIn(request, reply){
     try{
         console.log("signIn request landed");
         logger.info(`Data is received: ${JSON.stringify(request.body)}`);
+        console.log("Data received:", request.body);
         const { username, phonenumber, activationcode } = request.body;
         logger.info(`User has sign in request ${username} ${phonenumber}`);
 
@@ -23,8 +24,9 @@ async function signIn(request, reply){
 
         const userObj = await UserModel.getUserByPhoneNumber(phonenumber);
         console.log("userDetails:"+ JSON.stringify(userObj));
+        console.log(userObj.email, userObj.phonenumber, userObj["devices"]?.[activationcode]);
 
-        if(!userObj || !userObj.email || !userObj.phonenumber){
+        if(!userObj || !userObj.email || !userObj.phonenumber || !userObj["devices"]?.[activationcode]){
             logger.info(`User not found Email id: ${username}`);
             return reply.code(404).send({error: "User Not Found"});
         }
@@ -77,6 +79,8 @@ async function signUp(request, reply){
     try {
         const { username, phonenumber, email, activationcode } = request.body;
 
+        console.log(request.body);
+
         logger.info(`User Signup Request landed...\n ${JSON.stringify(request.body)}`);
 
         if(!username || !phonenumber || !email  || !activationcode )
@@ -103,8 +107,8 @@ async function signUp(request, reply){
             });
         }
     } catch(err) {
+        console.log(err);
         logger.error(err);
-        throw new Error(err);
     }
 }
 

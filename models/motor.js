@@ -30,35 +30,75 @@ async function isValidMotorId(motorId){
     return false;
 }
 
-async function updateFirebaseData(ref, data){
-    for(const key in data){
-      if(typeof data[key] === 'object' && data[key] !== null){
-        await updateFirebaseData(ref.child(key), data[key]);
-      }
-      else{
-        await ref.child(key).set(data[key]);
-      }
+function deepMerge(target, source) {
+    for(const [key, value] of Object.entries(source)){
+        if(typeof value === 'object' && value !== null){
+            if(!target[key] || typeof target[key] !== 'object'){
+                target[key] = {};
+            }
+            deepMerge(target[key], value);
+        }
+        else{
+            target[key] = value;
+        }
     }
-    return true;
+    return target;
+}
+
+async function updateFirebaseData(ref, newData){
+    try{
+        const snapshot = await ref.once('value');
+        const currentData = snapshot.val() || {};
+        const mergedData = deepMerge(currentData, newData);
+        await ref.update(mergedData);
+        return true;
+    }
+    catch(error){
+        console.error("Error appending data:", error);
+        return false;
+    }
 }
 
 async function updateMotorDetails(motorId, motorData){
     try{
+        console.log("motorid from updateMotorDetails", motorId);
         const ref = motorCollection.child(motorId);
         await updateFirebaseData(ref, motorData);
-        return true;
     }
     catch(error){
+        console.log(error);
         logger.error(error);
         return false;
     }
+    return true;
 }
 
 async function addUser(userId, motorId){
     return false;
 }
 
-async function updateNotification(userId, motorid, event){
+async function updateNotification(userId, motorId, newNotification){
+    try{
+        console.log(`landed from updateNotification for userId: ${userId}, motorId: ${motorId}`);
+
+        const ref = motorCollection.child(motorId).child('notification');
+
+        await ref.transaction((currentNotifications) =>{
+            currentNotifications = currentNotifications || [];
+            currentNotifications.unshift(newNotification);
+        
+            if(currentNotifications.length > 50){
+                currentNotifications = currentNotifications.slice(0, 50);
+            }
+        
+            return currentNotifications;
+        });
+
+    }catch(error){
+        console.error("Error appending notification:", error);
+        logger.error(error);
+        return false;
+    }
     return true;
 }
 
@@ -66,5 +106,6 @@ module.exports = {
     getMotorDetails,
     isValidMotorId,
     updateMotorDetails,
+    updateNotification,
     addUser
 }

@@ -122,6 +122,10 @@ const createUser = async (userData) => {
     const user = collection.push();
     // userData.password = await bcrypt.hash(userData.password, 10);
     console.log(userData);
+    userData.devices = {};
+    userData.devices[userData.activationcode] = true;
+    delete userData.activationcode;
+
     await user.set(userData);
     
     let userId = user.key;
@@ -149,15 +153,21 @@ const getAllUsers = async () => {
 }
 
 const getUser = async (userId) => {
-  const userRef = collection.doc(userId);
-  const userSnapshot = await userRef.get();
+  const userRef = collection.child(userId);
+  const userSnapshot = await userRef.once('value');
 
-  if (!userSnapshot.exists) {
+  if (!userSnapshot.exists()) {
     throw new Error('User not found');
   }
 
-  return { id: userSnapshot.id, ...userSnapshot.data() };
+  return { id: userSnapshot.key, ...userSnapshot.val() };
 };
+
+const getUserNameByUserId = async (userId) => {
+  const userData = await getUser(userId);
+  console.log(userData);
+  return await userData.username || undefined;
+}
 
 const getUserByEmail = async (emailId) => {
     logger.info("Getting email to get User Details... EmailId is: "+ emailId);
@@ -306,16 +316,18 @@ const isUserExistsByEmailId = async (emailId) => {
 }
 
 const getUserByPhoneNumber = async (phonenumber) => {
+  console.log("phonenumber", phonenumber);
   const userSnapShot = await collection.once('value');
   const users = userSnapShot.val();
+  console.log("users", users);
   const userId = Object.keys(users).filter(id => {
     const user = users[id];
     return user.phonenumber == phonenumber;
-  });
+  })[0];
 
   if(userId)
   {
-    users[userId].userId = userId[0];
+    users[userId].userId = userId;
     return users[userId];
   }
   return undefined;
@@ -325,11 +337,13 @@ const isUserExistsByPhoneNumber = async (phoneNumber) => {
   try{
     const user = await getUserByPhoneNumber(phoneNumber);
     logger.info(`Existing checking this phonenumber: ${phoneNumber}: ${JSON.stringify(user)}`);
+    console.log(user);
     if(user && user.phonenumber){
       return user.userId;
     }
   }
   catch(error){
+    console.log(error);
     logger.error(error);
     throw new Error(error);
   }
@@ -426,5 +440,6 @@ module.exports = {
   getUserByClientId,
   isUserExistsByPhoneNumber,
   getUserByPhoneNumber,
-  addDevice 
+  addDevice ,
+  getUserNameByUserId
 };
