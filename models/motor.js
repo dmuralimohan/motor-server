@@ -85,7 +85,7 @@ async function updateNotification(userId, motorId, newNotification){
 
         await ref.transaction((currentNotifications) =>{
             currentNotifications = currentNotifications || [];
-            currentNotifications.unshift(newNotification);
+            currentNotifications.unshift({message: newNotification, time: new Date().toISOString() , id: userId});
         
             if(currentNotifications.length > 50){
                 currentNotifications = currentNotifications.slice(0, 50);

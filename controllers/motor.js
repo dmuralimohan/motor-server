@@ -80,6 +80,7 @@ async function updateMotorDetails(request, reply){
         console.log("landed from updateMotorDetails");
 
         const { motorid, userid,  data} = request.body;
+        console.log(motorid, userid, data);
 
         /*const motorDetails = motorModel.isValidMotorUser(userId, motorId);
         if(!motorDetails)
