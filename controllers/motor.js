@@ -92,7 +92,7 @@ async function updateMotorDetails(request, reply){
         if(isUpdated)
         {
             const [key, value] = Object.entries(data)[0];
-            const notification = `${key == "status" ? "motor status" : key} is ${value}, updated by ${await userModel.getUserNameByUserId(userid)}`;
+            const notification = `${key == "status" ? "motor status" : key} is ${JSON.stringify(value)}, updated by ${await userModel.getUserNameByUserId(userid)}`;
             console.log(notification);
             if(motorModel.updateNotification(userid, motorid, notification)){
                 return reply.code(200).send({
