@@ -4,7 +4,7 @@
 
 const userModel = require('../models/user');
 const motorModel = require('../models/motor');
-const mqttManager = require('../models/mqtt/mqttManager');
+// const mqttManager = require('../models/mqtt/mqttManager');
 const logger = require('../plugins/fastify').logger;
 
 async function getMotorDetails(request, reply){
@@ -90,7 +90,7 @@ async function updateMotorDetails(request, reply){
             return reply.code(401).send("Unauthorized user");
         }*/
 
-        await mqttManager.sendMessage(motorid, data);
+        // await mqttManager.sendMessage(motorid, data);
         
         const isUpdated = motorModel.updateMotorDetails(motorid, data);
         if(isUpdated)
