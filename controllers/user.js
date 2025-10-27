@@ -5,9 +5,7 @@
 const bcrypt = require('bcrypt');
 const twilio = require('twilio');
 
-const accountSid = 'ACf7b93d833f6ed1bc1c45ff35dbcdb03e';
-const authToken = 'f3bb27a7bf1b6296726cac37f7cc4668';
-const client = require('twilio')(accountSid, authToken);
+const client = require('twilio')("ACf7b93d833f6ed1bc1c45ff35dbcdb03e", "f3bb27a7bf1b6296726cac37f7cc4668");
 
 
 const UserModel = require('../models/user');
