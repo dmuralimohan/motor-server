@@ -96,7 +96,7 @@ fastify.register(require('@fastify/cors'),
     credentials: true
 });
 
-const port = process.env.PRODUCTION_PORT || 3001;
+const port = process.env.PRODUCTION_PORT || 5001;
 
 fastify.listen({
     port: port,

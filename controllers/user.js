@@ -3,6 +3,11 @@
 */
 
 const bcrypt = require('bcrypt');
+const twilio = require('twilio');
+
+const accountSid = 'ACf7b93d833f6ed1bc1c45ff35dbcdb03e';
+const authToken = 'f3bb27a7bf1b6296726cac37f7cc4668';
+const client = require('twilio')(accountSid, authToken);
 
 
 const UserModel = require('../models/user');
@@ -15,10 +20,10 @@ async function signIn(request, reply){
         console.log("signIn request landed");
         logger.info(`Data is received: ${JSON.stringify(request.body)}`);
         console.log("Data received:", request.body);
-        const { username, phonenumber, activationcode } = request.body;
-        logger.info(`User has sign in request ${username} ${phonenumber}`);
+        const { phonenumber, activationcode } = request.body;
+        logger.info(`User has sign in request ${phonenumber}`);
 
-        if(!username || !phonenumber || !activationcode){
+        if(!phonenumber || !activationcode){
             return reply.code(401).send("Invalid Credentials");
         }
 
@@ -27,10 +32,19 @@ async function signIn(request, reply){
         console.log(userObj.email, userObj.phonenumber, userObj["devices"]?.[activationcode]);
 
         if(!userObj || !userObj.email || !userObj.phonenumber || !userObj["devices"]?.[activationcode]){
-            logger.info(`User not found Email id: ${username}`);
+            logger.info(`User not found Email id: ${phonenumber}`);
             return reply.code(404).send({error: "User Not Found"});
         }
         logger.info("Logged User:"+ JSON.stringify(userObj));
+
+        const otp = Math.floor(100 + Math.random() * 9000);
+        client.messages
+            .create({
+                body: 'Welcome back to Makx-Controle, your [OTP] is '+ otp,
+                from: '+17623374723',
+                to: '+91'+ phonenumber
+            })
+            .then(message => console.log(message.sid));
 
         // const isMatch = password === userObj.password; //await bcrypt.compare(password, userObj.password);
         // if(!isMatch){
@@ -58,7 +72,8 @@ async function signIn(request, reply){
             isSuccess: true,
             userid: userObj.userId,
             motorid: activationcode,
-            devices: userObj.devices
+            devices: userObj.devices,
+            otp: otp,
         };
 
         reply.status(200).send({

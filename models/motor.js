@@ -61,7 +61,7 @@ async function updateFirebaseData(ref, newData){
 
 async function updateMotorDetails(motorId, motorData){
     try{
-        console.log("motorid from updateMotorDetails", motorId);
+        console.log("motorid from updateMotorDetails", motorId, motorData);
         const ref = motorCollection.child(motorId);
         await updateFirebaseData(ref, motorData);
     }
