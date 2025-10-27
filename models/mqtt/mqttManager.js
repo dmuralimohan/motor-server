@@ -3,7 +3,7 @@
  * Hanlding MQTT based clients
  */
 
-import mqtt from 'mqtt';
+const mqtt = require('mqtt');
 import config from 'dotenv';
 
 const clients = {};
