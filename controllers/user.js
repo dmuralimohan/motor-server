@@ -2,10 +2,12 @@
     Control all the user Routes with corresponding requests and responses
 */
 
+const dotenv = require("dotenv");
+dotenv.config();
+
 const bcrypt = require('bcrypt');
 const twilio = require('twilio');
-
-const client = require('twilio')("ACf7b93d833f6ed1bc1c45ff35dbcdb03e", "f3bb27a7bf1b6296726cac37f7cc4668");
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 
 const UserModel = require('../models/user');
@@ -35,14 +37,21 @@ async function signIn(request, reply){
         }
         logger.info("Logged User:"+ JSON.stringify(userObj));
 
-        const otp = Math.floor(100 + Math.random() * 9000);
-        client.messages
-            .create({
-                body: 'Welcome back to Makx-Controle, your [OTP] is '+ otp,
-                from: '+17623374723',
+        const otp = Math.floor(1000 + Math.random() * 9000);
+        let response = {};
+
+            try {
+                response = await client.messages.create({
+                body: 'welcome to max-controle, your otp is '+ otp,
+                from: process.env.TWILIO_PHONE_NUMBER,
                 to: '+91'+ phonenumber
-            })
-            .then(message => console.log(message.sid));
+                });
+
+                console.log("otpsent", phonenumber);
+            } catch (err) {
+                console.error(err);
+                return reply.code(500).send({ error: 'Failed to send SMS', details: err.message });
+            }
 
         // const isMatch = password === userObj.password; //await bcrypt.compare(password, userObj.password);
         // if(!isMatch){
@@ -68,9 +77,12 @@ async function signIn(request, reply){
 
         const responseObj = {
             isSuccess: true,
+            username: userObj.username,
             userid: userObj.userId,
             motorid: activationcode,
             devices: userObj.devices,
+            success: true,
+            sid: response.sid,
             otp: otp,
         };
 
@@ -78,7 +90,7 @@ async function signIn(request, reply){
             data: responseObj
         });
 
-        logger.info(`User Logged in Successfully USERNAME: ${username} in ${new Date()}`);
+        logger.info(`User Logged in Successfully USERNAME: ${phonenumber} in ${new Date()}`);
         
     } catch(err){
         console.log(err);
