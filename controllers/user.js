@@ -2,12 +2,12 @@
     Control all the user Routes with corresponding requests and responses
 */
 
-const dotenv = require("dotenv");
-dotenv.config();
+// const dotenv = require("dotenv");
+// dotenv.config();
 
 const bcrypt = require('bcrypt');
 const twilio = require('twilio');
-const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+const client = twilio("ACf7b93d833f6ed1bc1c45ff35dbcdb03e", "50a2197f4e4c951f6b2d9595010bf162");
 
 
 const UserModel = require('../models/user');
@@ -43,7 +43,7 @@ async function signIn(request, reply){
             try {
                 response = await client.messages.create({
                 body: 'welcome to max-controle, your otp is '+ otp,
-                from: process.env.TWILIO_PHONE_NUMBER,
+                from: "+17623374723",
                 to: '+91'+ phonenumber
                 });
 
