@@ -7,7 +7,6 @@
 
 const bcrypt = require('bcrypt');
 const twilio = require('twilio');
-const client = twilio("ACf7b93d833f6ed1bc1c45ff35dbcdb03e", "50a2197f4e4c951f6b2d9595010bf162");
 
 
 const UserModel = require('../models/user');
@@ -38,6 +37,7 @@ async function signIn(request, reply){
         logger.info("Logged User:"+ JSON.stringify(userObj));
 
         const otp = Math.floor(1000 + Math.random() * 9000);
+        const client = await twilio("ACf7b93d833f6ed1bc1c45ff35dbcdb03e", "83ca08c06eea2d04b781c13ec6a8c5d6");
         let response = {};
 
             try {
