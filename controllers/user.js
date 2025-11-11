@@ -19,16 +19,16 @@ async function signIn(request, reply){
         console.log("signIn request landed");
         logger.info(`Data is received: ${JSON.stringify(request.body)}`);
         console.log("Data received:", request.body);
-        const { phonenumber, activationcode } = request.body;
+        const { phonenumber } = request.body;
         logger.info(`User has sign in request ${phonenumber}`);
 
-        if(!phonenumber || !activationcode){
+        if(!phonenumber){
             return reply.code(401).send("Invalid Credentials");
         }
 
         const userObj = await UserModel.getUserByPhoneNumber(phonenumber);
         console.log("userDetails:"+ JSON.stringify(userObj));
-        console.log(userObj.email, userObj.phonenumber, userObj["devices"]?.[activationcode]);
+        console.log(userObj.email, userObj.phonenumber);
 
         if(!userObj || !userObj.email || !userObj.phonenumber || !userObj["devices"]?.[activationcode]){
             logger.info(`User not found Email id: ${phonenumber}`);
@@ -79,7 +79,7 @@ async function signIn(request, reply){
             isSuccess: true,
             username: userObj.username,
             userid: userObj.userId,
-            motorid: activationcode,
+            motorid: userObj["devices"]?.[activationcode],
             devices: userObj.devices,
             success: true,
             sid: response.sid,
