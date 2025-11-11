@@ -30,7 +30,9 @@ async function signIn(request, reply){
         console.log("userDetails:"+ JSON.stringify(userObj));
         console.log(userObj.email, userObj.phonenumber);
 
-        if(!userObj || !userObj.email || !userObj.phonenumber || !userObj["devices"]?.[activationcode]){
+        const activationcode = Object.keys(userObj["devices"])[0];
+
+        if(!userObj || !userObj.email || !userObj.phonenumber || !activationcode){
             logger.info(`User not found Email id: ${phonenumber}`);
             return reply.code(404).send({error: "User Not Found"});
         }
@@ -79,7 +81,7 @@ async function signIn(request, reply){
             isSuccess: true,
             username: userObj.username,
             userid: userObj.userId,
-            motorid: userObj["devices"]?.[activationcode],
+            motorid: activationcode,
             devices: userObj.devices,
             success: true,
             sid: response.sid,
