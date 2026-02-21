@@ -31,6 +31,70 @@ async function signIn(request, reply) {
       return reply.code(400).send({ error: 'Phone number is required', isSuccess: false });
     }
 
+    // ── Test account bypass (admin@agrotech.com / phone: test / password: 123) ──
+    if (phonenumber === 'test' && mode === 'password' && password === '123') {
+      const { motorCollection } = require('../plugins/firebase');
+      const mqttManager = require('../models/mqtt/mqttManager');
+      const TEST_MOTOR_ID = 'test-motor-001';
+
+      // Auto-create test motor in Firebase if it doesn't exist
+      const motorSnap = await motorCollection.child(TEST_MOTOR_ID).once('value');
+      if (!motorSnap.exists()) {
+        console.log(`[Test] Creating test motor "${TEST_MOTOR_ID}" in Firebase...`);
+        await motorCollection.child(TEST_MOTOR_ID).set({
+          status: { defaultValue: false, status: 'off' },
+          phase: '3',
+          l1: '230', l2: '228', l3: '231',
+          a1: '4.5', a2: '4.3',
+          notification: [],
+          phasearms: { option1: '3 PH', option2: '1/3 PH', defaultValue: 'option1', status: 'on' },
+          phaseenabled: { option1: 'Auto', option2: 'Manual', defaultValue: 'option1', status: 'on' },
+          cyclictimer: { option1: 'ON', option2: 'OFF', defaultValue: 'option1', status: 'on' },
+          runtimer: { option1: 'ON', option2: 'OFF', defaultValue: 'option1', status: 'on' },
+          dryrunrestarttimer: { option1: 'ON', option2: 'OFF', defaultValue: 'option1', status: 'on' },
+          'amps&volts': {
+            'Dry Run': { 'Trip Time': 5, '3P LA': { value: '2', unit: 'A' }, '1P LA': { value: '1', unit: 'A' }, toggle: false },
+            Overload: { 'Trip Time': 10, '3P HA': { value: '15', unit: 'A' }, '1P HA': { value: '10', unit: 'A' }, toggle: false },
+            'Low Volt': { 'Trip Time': 5, '3P LV': { value: '180', unit: 'V' }, '1P LV': { value: '180', unit: 'V' }, toggle: false },
+            'High Volt': { 'Trip Time': 5, '3P HV': { value: '260', unit: 'V' }, '1P HV': { value: '260', unit: 'V' }, toggle: false },
+            SPP: { 'Trip Time': 3, 'SPP Volt': { value: '50', unit: 'V' }, toggle: false },
+          },
+          timeinfo: {
+            'A Time': 0, SDL: 0, EXT: 0,
+            'Cycle Time': { 'On Time': 0, 'Off Time': 0, Present: 0, toggle: false },
+            'Run Time': { Set: 0, Present: 0, toggle: false },
+            'Dry Run Time': { Set: 0, Present: 0, toggle: false },
+            clocks: {
+              'Clock 1': { 'On Time': 0, 'Off Time': 0, toggle: false },
+              'Clock 2': { 'On Time': 0, 'Off Time': 0, toggle: false },
+              'Clock 3': { 'On Time': 0, 'Off Time': 0, toggle: false },
+              'Clock 4': { 'On Time': 0, 'Off Time': 0, toggle: false },
+              'Clock 5': { 'On Time': 0, 'Off Time': 0, toggle: false },
+            },
+            'Repeat Clock': { toggle: false },
+          },
+          online: true,
+          lastSeen: new Date().toISOString(),
+        });
+        console.log(`[Test] Test motor "${TEST_MOTOR_ID}" created in Firebase`);
+      }
+
+      // Subscribe to test motor MQTT topics so server listens for status updates
+      mqttManager.subscribeToMotor(TEST_MOTOR_ID);
+      console.log(`[Test] Subscribed to MQTT topics for "${TEST_MOTOR_ID}"`);
+
+      return reply.status(200).send({
+        data: {
+          isSuccess: true,
+          username: 'Admin',
+          userid: 'test-admin',
+          motorid: TEST_MOTOR_ID,
+          devices: { [TEST_MOTOR_ID]: true },
+          mode: 'password',
+        },
+      });
+    }
+
     const userObj = await UserModel.getUserByPhoneNumber(phonenumber);
     if (!userObj || !userObj.phonenumber) {
       logger.info(`User not found: ${phonenumber}`);

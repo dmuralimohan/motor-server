@@ -33,7 +33,7 @@ function userModel() {
 // ── Broker URL — falls back to the EC2 Mosquitto broker ─────────────────────
 const BROKER_URL = config.MQTT_URL
   || process.env.MQTT_URL
-  || 'ws://67.202.62.65:9001';
+  || 'ws://67.202.62.65:9001/mqtt';
 
 // ── Single shared MQTT client ───────────────────────────────────────────────
 let client = null;

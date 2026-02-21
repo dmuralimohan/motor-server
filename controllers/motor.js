@@ -69,7 +69,23 @@ async function updateMotorDetails(request, reply) {
     if (isUpdated) {
       const [key, value] = Object.entries(data)[0];
       const userName = userid ? await userModel.getUserNameByUserId(userid) : 'System';
-      const notification = `${key === 'status' ? 'Motor status' : key} is ${value}, updated by ${userName}`;
+
+      // Format value for readable notification text
+      let displayValue;
+      if (typeof value === 'object' && value !== null) {
+        if (value.defaultValue !== undefined) {
+          displayValue = value.status || String(value.defaultValue);
+        } else {
+          displayValue = Object.entries(value)
+            .filter(([k]) => k !== 'toggle')
+            .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
+            .join(', ');
+        }
+      } else {
+        displayValue = String(value);
+      }
+
+      const notification = `${key === 'status' ? 'Motor status' : key} is ${displayValue}, updated by ${userName}`;
 
       await motorModel.updateNotification(userid, motorid, notification);
 
@@ -131,7 +147,7 @@ async function simulateMotorStatus(request, reply) {
     // Publish to the motor's status topic (as if the motor sent it)
     const mqtt = require('mqtt');
     const config = require('../config/config');
-    const brokerUrl = "ws://67.202.62.65:9001";
+    const brokerUrl = config.MQTT_URL || process.env.MQTT_URL || "ws://67.202.62.65:9001/mqtt";
 
     const testClient = mqtt.connect(brokerUrl, {
       clientId: `sim-motor-${motorid}-${Date.now()}`,
@@ -191,7 +207,7 @@ async function getMqttStatus(request, reply) {
     return reply.code(200).send({
       connected: client ? client.connected : false,
       reconnecting: client ? client.reconnecting : false,
-      brokerUrl: "ws://67.202.62.65:9001",
+      brokerUrl: config.MQTT_URL || process.env.MQTT_URL || "ws://67.202.62.65:9001/mqtt",
     });
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to get MQTT status' });
