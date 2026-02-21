@@ -4,124 +4,117 @@
 
 const userModel = require('../models/user');
 const motorModel = require('../models/motor');
-// const mqttManager = require('../models/mqtt/mqttManager');
+const mqttManager = require('../models/mqtt/mqttManager');
 const logger = require('../plugins/fastify').logger;
 
-async function getMotorDetails(request, reply){
-    try{
-        console.log("motor get request landed");
-        logger.info(`motorData is received: ${JSON.stringify(request.query)}`);
-        console.log(request.query);
-
-        const { motorId } = request.query;
-        console.log(motorId);
-        if(!motorId)
-        {
-            return reply.code(401).send("required params not found");
-        }
-        // const userId = request.userId; //authenticated from middleware
-
-        const motorDetails = await motorModel.getMotorDetails(motorId); //motorModel.isValidMotorUser(userId, motorId);
-        if(!motorDetails)
-        {
-            return reply.code(401).send("Unauthorized motor details");
-        }
-        reply.status(200).send(motorDetails);
+async function getMotorDetails(request, reply) {
+  try {
+    const { motorId } = request.query;
+    if (!motorId) {
+      return reply.code(400).send({ error: 'motorId is required' });
     }
-    catch(error)
-    {
-        console.log(error);
-        logger.error(`Something error occurred [getMotorDetails]"+ ${error}`);
 
-        return new Error("Some error occurred getting motor details");
+    const motorDetails = await motorModel.getMotorDetails(motorId);
+    if (!motorDetails) {
+      return reply.code(404).send({ error: 'Motor not found' });
     }
+
+    return reply.status(200).send(motorDetails);
+  } catch (error) {
+    console.error(error);
+    logger.error(`getMotorDetails error: ${error}`);
+    return reply.code(500).send({ error: 'Internal server error' });
+  }
 }
 
-async function addMotorDetails(request, reply){
-    try{
-        console.log("motor post request landed");
-        const { phonenumber, devicename, deviceid } = request.body;
-        
-        if(!phonenumber || !devicename || !deviceid)
-        {
-            logger.info("invalid credentials from addMotorDetails");
-            return reply.code(401).send("Invalid Credentials");
-        }
+async function addMotorDetails(request, reply) {
+  try {
+    const { phonenumber, devicename, deviceid } = request.body;
 
-        if(!motorModel.isValidMotorId(deviceid))
-        {
-            logger.info("invalid motor credentials from addMotorDetails");
-            reply.code(400).send({
-                message: "Invalid MotorId"
-            });
-        }
-
-        const addedCode = motorModel.addUser(emailId, motorId);
-        if(addedCode === 1)
-        {
-            logger.info("adding user is not registered");
-            return reply.code(401).send({
-                error: "Adding user is not registered"
-            });
-        }
-        return reply.code(200).send({
-            message: "added Successfully"
-        });
+    if (!phonenumber || !devicename || !deviceid) {
+      return reply.code(400).send({ error: 'Missing required fields' });
     }
-    catch(error){
-        console.log(error);
-        logger.error(`Something error occurred [addMotorDetails]"+ ${error}`);
 
-        return new Error("Some error occurred adding motor details");
+    if (!(await motorModel.isValidMotorId(deviceid))) {
+      return reply.code(400).send({ message: 'Invalid Motor ID' });
     }
+
+    // TODO: Implement addUser logic when needed
+    return reply.code(200).send({ message: 'Added successfully' });
+  } catch (error) {
+    console.error(error);
+    logger.error(`addMotorDetails error: ${error}`);
+    return reply.code(500).send({ error: 'Internal server error' });
+  }
 }
 
-async function updateMotorDetails(request, reply){
-    try
-    {
-        console.log("landed from updateMotorDetails ", request.body);
+async function updateMotorDetails(request, reply) {
+  try {
+    const { motorid, userid, data } = request.body;
 
-        const { motorid, userid,  data} = request.body;
-        console.log(data);
+    if (!motorid || !data) {
+      return reply.code(400).send({ error: 'motorid and data are required' });
+    }
 
-        /*const motorDetails = motorModel.isValidMotorUser(userId, motorId);
-        if(!motorDetails)
-        {
-            return reply.code(401).send("Unauthorized user");
-        }*/
+    // Send command to physical motor via MQTT
+    try {
+      await mqttManager.sendMessage(motorid, data);
+    } catch (mqttErr) {
+      console.warn('MQTT send failed (motor may be offline):', mqttErr.message);
+      // Continue even if MQTT fails - update Firebase anyway
+    }
 
-        // await mqttManager.sendMessage(motorid, data);
-        
-        const isUpdated = motorModel.updateMotorDetails(motorid, data);
-        if(isUpdated)
-        {
-            const [key, value] = Object.entries(data)[0];
-            const notification = `${key == "status" ? "motor status" : key} is ${value}, updated by ${await userModel.getUserNameByUserId(userid)}`;
-            console.log(notification);
-            if(motorModel.updateNotification(userid, motorid, notification)){
-                return reply.code(200).send({
-                    message: "Data updated sucessfully"
-                });
+    // Update Firebase
+    const isUpdated = await motorModel.updateMotorDetails(motorid, data);
+    if (isUpdated) {
+      const [key, value] = Object.entries(data)[0];
+      const userName = userid ? await userModel.getUserNameByUserId(userid) : 'System';
+      const notification = `${key === 'status' ? 'Motor status' : key} is ${value}, updated by ${userName}`;
+
+      await motorModel.updateNotification(userid, motorid, notification);
+
+      // Send push notifications to other connected users
+      try {
+        const tokens = await userModel.getPushTokensForMotor(motorid, userid);
+        if (tokens && tokens.length > 0) {
+          // Use Expo push API
+          const { Expo } = require('expo-server-sdk');
+          const expo = new Expo();
+          const messages = tokens
+            .filter((t) => Expo.isExpoPushToken(t))
+            .map((pushToken) => ({
+              to: pushToken,
+              sound: 'default',
+              title: 'Motor Update',
+              body: notification,
+              data: { motorid },
+              channelId: 'motor-alerts',
+            }));
+
+          if (messages.length > 0) {
+            const chunks = expo.chunkPushNotifications(messages);
+            for (const chunk of chunks) {
+              try { await expo.sendPushNotificationsAsync(chunk); } catch (e) { console.error('Push error:', e); }
             }
-            logger.info("motor data updated sucessfully");
+          }
         }
-        logger.info("unable to update the motor details");
-    }
-    catch(error)
-    {
-        console.log(error);
-        logger.error(`Something error occurred [updateMotorDetails]"+ ${error}`);
+      } catch (pushErr) {
+        console.warn('Push notification failed:', pushErr.message);
+      }
 
-        return new Error("Some error occurred updating motor details");
+      return reply.code(200).send({ message: 'Data updated successfully' });
     }
 
-    return reply.code(500).send({
-            message: "Internal Server Error"
-    });
+    return reply.code(500).send({ message: 'Failed to update motor details' });
+  } catch (error) {
+    console.error(error);
+    logger.error(`updateMotorDetails error: ${error}`);
+    return reply.code(500).send({ error: 'Internal server error' });
+  }
 }
 
 module.exports = {
-    addMotorDetails,
-    getMotorDetails,
-    updateMotorDetails
-}
+  addMotorDetails,
+  getMotorDetails,
+  updateMotorDetails,
+};

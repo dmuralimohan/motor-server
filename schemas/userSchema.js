@@ -1,43 +1,42 @@
 /*
-    user schemas based on the user details and token generation process
+    User schemas for validation
 */
 
 const Joi = require('joi');
 
 const userRegisterSchema = Joi.object({
-  firstname: Joi.string().required(),
-  lastname: Joi.string().required(),
+  username: Joi.string().min(2).max(50).required(),
   email: Joi.string().email().required(),
+  phonenumber: Joi.string().min(10).max(15).required(),
   password: Joi.string().min(6).required(),
-  dob: Joi.date().required(),
-  country: Joi.string().required(),
-  verifyCode: Joi.number().required(),
-  authToken: Joi.string().optional(),
-  devices: Joi.object().optional()
+  activationcode: Joi.string().required(),
 }).options({ presence: 'required' });
 
 const baseUserSchema = Joi.object({
-  firstname: Joi.string().optional(),
-  lastname: Joi.string().optional(),
   username: Joi.string().optional(),
   email: Joi.string().email().optional(),
-  password: Joi.string().min(6).optional(),
-  dob: Joi.date().optional(),
-  country: Joi.string().optional(),
-  activationcode: Joi.number().optional(),
   phonenumber: Joi.string().optional(),
-  authToken: Joi.string().optional()
+  password: Joi.string().min(6).optional(),
+  activationcode: Joi.string().optional(),
+  authToken: Joi.string().optional(),
+  devices: Joi.object().optional(),
+  pushToken: Joi.string().optional(),
 }).options({ presence: 'optional' });
 
-const passwordSchema = baseUserSchema.fork(['password'], (schema) => schema.required());
+const signInSchema = Joi.object({
+  phonenumber: Joi.string().min(10).required(),
+  password: Joi.string().optional(),
+  mode: Joi.string().valid('otp', 'password').default('otp'),
+});
 
-const dobSchema = baseUserSchema.fork(['dob'], (schema) => schema.required());
-
-const countrySchema = baseUserSchema.fork(['country'], (schema) => schema.required());
+const validateOTPSchema = Joi.object({
+  phonenumber: Joi.string().min(10).required(),
+  otp: Joi.number().integer().min(1000).max(9999).required(),
+});
 
 module.exports = {
   userRegisterSchema,
-  passwordSchema,
-  dobSchema,
-  countrySchema
+  baseUserSchema,
+  signInSchema,
+  validateOTPSchema,
 };

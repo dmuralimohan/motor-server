@@ -385,6 +385,49 @@ const removeDevice = async (phonenumber, deviceid) => {
   }
 };
 
+/**
+ * Update push token for a user
+ */
+const updatePushToken = async (userId, token) => {
+  try {
+    const userRef = collection.child(userId);
+    await userRef.update({ pushToken: token });
+    return true;
+  } catch (error) {
+    console.error('Error updating push token:', error);
+    return false;
+  }
+};
+
+/**
+ * Get push tokens for all users connected to a motor
+ * @param {string} motorId - the motor device ID
+ * @param {string} excludeUserId - optional user to exclude (the one who made the change)
+ */
+const getPushTokensForMotor = async (motorId, excludeUserId) => {
+  try {
+    const snapshot = await collection.once('value');
+    const users = snapshot.val();
+    if (!users) return [];
+
+    const tokens = [];
+    for (const [uid, userData] of Object.entries(users)) {
+      // Skip excluded user
+      if (excludeUserId && uid === excludeUserId) continue;
+      
+      // Check if user has this motor in their devices
+      if (userData.devices && userData.devices[motorId] && userData.pushToken) {
+        tokens.push(userData.pushToken);
+      }
+    }
+
+    return tokens;
+  } catch (error) {
+    console.error('Error getting push tokens for motor:', error);
+    return [];
+  }
+};
+
 /*
   Generating Authentication Token and Refreshtoken
 */
@@ -440,6 +483,8 @@ module.exports = {
   getUserByClientId,
   isUserExistsByPhoneNumber,
   getUserByPhoneNumber,
-  addDevice ,
-  getUserNameByUserId
+  addDevice,
+  getUserNameByUserId,
+  updatePushToken,
+  getPushTokensForMotor,
 };
