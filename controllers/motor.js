@@ -113,8 +113,95 @@ async function updateMotorDetails(request, reply) {
   }
 }
 
+/**
+ * Simulate a motor sending an MQTT status message.
+ * Useful for testing the full flow without real hardware.
+ *
+ * POST /motor/simulate-status
+ * Body: { motorid: "motor1", data: { l1: "230", l2: "228", a1: "4.5", status: true } }
+ */
+async function simulateMotorStatus(request, reply) {
+  try {
+    const { motorid, data } = request.body;
+
+    if (!motorid || !data) {
+      return reply.code(400).send({ error: 'motorid and data are required' });
+    }
+
+    // Publish to the motor's status topic (as if the motor sent it)
+    const mqtt = require('mqtt');
+    const config = require('../config/config');
+    const brokerUrl = config.MQTT_URL || process.env.MQTT_URL || 'wss://makx-mqtt-broker.onrender.com';
+
+    const testClient = mqtt.connect(brokerUrl, {
+      clientId: `sim-motor-${motorid}-${Date.now()}`,
+      clean: true,
+      username: process.env.MQTT_USER || '',
+      password: process.env.MQTT_PASS || '',
+    });
+
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        testClient.end();
+        resolve(reply.code(504).send({ error: 'MQTT connection timeout' }));
+      }, 8000);
+
+      testClient.once('connect', () => {
+        clearTimeout(timeout);
+        const topic = `motors/${motorid}/status`;
+        const payload = JSON.stringify(data);
+
+        testClient.publish(topic, payload, { qos: 1 }, (err) => {
+          testClient.end();
+          if (err) {
+            resolve(reply.code(500).send({ error: 'Failed to publish', detail: err.message }));
+          } else {
+            console.log(`[Simulate] Published to ${topic}: ${payload}`);
+            resolve(reply.code(200).send({
+              message: 'Simulated motor status published',
+              topic,
+              data,
+              broker: brokerUrl,
+            }));
+          }
+        });
+      });
+
+      testClient.once('error', (err) => {
+        clearTimeout(timeout);
+        testClient.end();
+        resolve(reply.code(500).send({ error: 'MQTT error', detail: err.message }));
+      });
+    });
+  } catch (error) {
+    console.error(error);
+    return reply.code(500).send({ error: 'Internal server error' });
+  }
+}
+
+/**
+ * Get MQTT broker connection status.
+ * GET /motor/mqtt-status
+ */
+async function getMqttStatus(request, reply) {
+  try {
+    const mqttManager = require('../models/mqtt/mqttManager');
+    const client = mqttManager.getClient();
+
+    return reply.code(200).send({
+      connected: client ? client.connected : false,
+      reconnecting: client ? client.reconnecting : false,
+      brokerUrl: process.env.MQTT_URL || 'wss://makx-mqtt-broker.onrender.com',
+    });
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to get MQTT status' });
+  }
+}
+
 module.exports = {
   addMotorDetails,
   getMotorDetails,
   updateMotorDetails,
+  simulateMotorStatus,
+  getMqttStatus,
 };
