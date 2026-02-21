@@ -131,7 +131,7 @@ async function simulateMotorStatus(request, reply) {
     // Publish to the motor's status topic (as if the motor sent it)
     const mqtt = require('mqtt');
     const config = require('../config/config');
-    const brokerUrl = config.MQTT_URL || process.env.MQTT_URL || 'wss://makx-mqtt-broker.onrender.com';
+    const brokerUrl = "ws://67.202.62.65:9001";
 
     const testClient = mqtt.connect(brokerUrl, {
       clientId: `sim-motor-${motorid}-${Date.now()}`,
@@ -191,7 +191,7 @@ async function getMqttStatus(request, reply) {
     return reply.code(200).send({
       connected: client ? client.connected : false,
       reconnecting: client ? client.reconnecting : false,
-      brokerUrl: process.env.MQTT_URL || 'wss://makx-mqtt-broker.onrender.com',
+      brokerUrl: "ws://67.202.62.65:9001",
     });
   } catch (error) {
     return reply.code(500).send({ error: 'Failed to get MQTT status' });
