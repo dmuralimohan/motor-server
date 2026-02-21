@@ -33,9 +33,24 @@ async function signIn(request, reply) {
 
     // ── Test account bypass (admin@agrotech.com / phone: test / password: 123) ──
     if (phonenumber === 'test' && mode === 'password' && password === '123') {
-      const { motorCollection } = require('../plugins/firebase');
+      const { motorCollection, userCollection } = require('../plugins/firebase');
       const mqttManager = require('../models/mqtt/mqttManager');
       const TEST_MOTOR_ID = 'test-motor-001';
+      const TEST_USER_ID = 'test-admin';
+
+      // Auto-create test user in Firebase if it doesn't exist
+      const userSnap = await userCollection.child(TEST_USER_ID).once('value');
+      if (!userSnap.exists()) {
+        console.log(`[Test] Creating test user "${TEST_USER_ID}" in Firebase...`);
+        await userCollection.child(TEST_USER_ID).set({
+          username: 'Admin',
+          phonenumber: 'test',
+          password: '123',
+          devices: { [TEST_MOTOR_ID]: true },
+          userId: TEST_USER_ID,
+        });
+        console.log(`[Test] Test user "${TEST_USER_ID}" created in Firebase`);
+      }
 
       // Auto-create test motor in Firebase if it doesn't exist
       const motorSnap = await motorCollection.child(TEST_MOTOR_ID).once('value');
