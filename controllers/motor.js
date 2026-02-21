@@ -152,8 +152,8 @@ async function simulateMotorStatus(request, reply) {
     const testClient = mqtt.connect(brokerUrl, {
       clientId: `sim-motor-${motorid}-${Date.now()}`,
       clean: true,
-      username: process.env.MQTT_USER || '',
-      password: process.env.MQTT_PASS || '',
+      ...(process.env.MQTT_USER ? { username: process.env.MQTT_USER } : {}),
+      ...(process.env.MQTT_PASS ? { password: process.env.MQTT_PASS } : {}),
     });
 
     return new Promise((resolve) => {

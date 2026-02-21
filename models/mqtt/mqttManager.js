@@ -47,8 +47,8 @@ function getClient() {
     clean: true,
     reconnectPeriod: 5000,
     connectTimeout: 10000,
-    username: process.env.MQTT_USER || '',
-    password: process.env.MQTT_PASS || '',
+    ...(process.env.MQTT_USER ? { username: process.env.MQTT_USER } : {}),
+    ...(process.env.MQTT_PASS ? { password: process.env.MQTT_PASS } : {}),
   });
 
   client.on('connect', () => {
