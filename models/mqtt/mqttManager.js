@@ -30,10 +30,10 @@ function userModel() {
   return _userModel;
 }
 
-// ── Broker URL — falls back to the new MakX broker on Render ────────────────
+// ── Broker URL — falls back to the EC2 Mosquitto broker ─────────────────────
 const BROKER_URL = config.MQTT_URL
   || process.env.MQTT_URL
-  || 'wss://makx-mqtt-broker.onrender.com';
+  || 'ws://67.202.62.65:9001';
 
 // ── Single shared MQTT client ───────────────────────────────────────────────
 let client = null;
